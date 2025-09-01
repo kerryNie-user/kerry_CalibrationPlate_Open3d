@@ -75,12 +75,13 @@ class ObbSelectedWidget(OperativeWidget):
             self.scene.show_axes(False)
         else:
             info("Selected window has been cleaned.")
-            self.clear()
+            self.clean()
 
-    def open_window(self, obb):
+    def open_window(self, obb_idx):
         if self.scene is None:
             raise RuntimeError("Scene has not been initialized, please use 'config_window' function before.")
 
+        obb = self.patches_[obb_idx]
         cropped_pcd, obb = PlateExtracter().extract_plate(self.pcd_, obb)
         aligned_pcd = self.aligner_.align(cropped_pcd, obb)
         pcd2d = PcdDimensionOperator().compress_to_2d(aligned_pcd)
@@ -98,10 +99,12 @@ class ObbSelectedWidget(OperativeWidget):
         self.setup_camera(60.0, aabb, aabb.get_center())
 
     def clear(self):
-        self.scene.clear_geometry()
-
         self.pcd_ = None
         self.patches_ = None
+        self.clean()
+
+    def clean(self):
+        self.scene.clear_geometry()
         self.aligner_.clear()
 
         self.sphere_centers_ = None
@@ -117,7 +120,6 @@ class ObbSelectedWidget(OperativeWidget):
 
         self.mouse_origin_position_ = None
         self.sphere_origin_position_ = None
-
 
 
     def _callback_mouse(self, event):

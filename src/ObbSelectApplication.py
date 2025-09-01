@@ -28,7 +28,7 @@ class ObbSelectApplication:
         info("Application started.")
         self.app_.run()
 
-    def open_new_window(self, obb):
+    def open_new_window(self, obb_idx):
         # 如果没有选择窗口，则创建
         if self.selected_window_ is None:
             info("Creating new selected window...")
@@ -36,10 +36,9 @@ class ObbSelectApplication:
             self.selected_window_.set_on_close(self._callback_selected_window_closed)
             self.selected_widget_ = ObbSelectedWidget(self.pcd_, self.patches_)
             self.selected_window_.add_child(self.selected_widget_)
-            info("Selected window has been created.")
-
+            
         self.selected_widget_.config_window(self.selected_window_.renderer)
-        self.selected_widget_.open_window(obb)
+        self.selected_widget_.open_window(obb_idx)
         self.selected_window_.show(True)
 
     def _callback_select_window_closed(self):

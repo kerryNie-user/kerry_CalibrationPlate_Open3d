@@ -1,5 +1,6 @@
 import time
 import numpy as np
+import threading
 
 import open3d.geometry as geometry
 import open3d.visualization.gui as gui
@@ -17,7 +18,6 @@ class ObbSelectWidget(OperativeWidget):
 
     def __init__(self, pcd, patches, renderer):
         super().__init__()
-
         self.pcd_ = pcd
         self.patches_ = patches
 
@@ -58,6 +58,9 @@ class ObbSelectWidget(OperativeWidget):
         debug(f"-------[Time : {time.process_time()}]-------")
         debug(f"Mouse event type: {event.type}")
 
+        debug(f"Selected obb == OBB[{self.selected_idx_}]")
+        debug(f"Highlighted obb == OBB[{self.highlight_idx_}]")
+
         mouse_position = np.array([event.x, event.y])
 
         if event.type == gui.MouseEvent.Type.DRAG:
@@ -69,8 +72,7 @@ class ObbSelectWidget(OperativeWidget):
 
         elif event.type == gui.MouseEvent.Type.BUTTON_UP:
             if self.selected_idx_ != self.NONE_HITTED_STATE:
-                selected_obb = self.patches_[self.selected_idx_]
-                self._callback_on_select(selected_obb)
+                self._callback_on_select(self.selected_idx_)
                     
         self.highlight_idx_ = self.detect_intersects(mouse_position)
         self.update_obb_highlight(self.highlight_idx_, self.MOUSE_OVER_COLOR, "highlighted_obb")
