@@ -24,7 +24,7 @@ conda deactivate
 2. 代码模块介绍：
     2.1 CsvIO 专门负责文件读写操作
     2.2 logger 负责管理调试输出相关配置，更改调试等级可以在 main 函数中的 logger.setup_logger(level=logger.SUGGESTION) 处进行
-    2.3 ObbSelectApplicator ObbSelectWidgetor ObbSelectedWidgetor 这三个模块负责管理窗口
+    2.3 CalibrationApplicator PlateSelectionWidgetor FineTuningWidgetor 这三个模块负责管理窗口
     2.4 PcdAligner PcdDimension PcdDownsample PlateExtraction 是一些功能型模块
 3. 项目文件简介：
     ├── res/                       # csv 格式雷达点云
@@ -32,9 +32,9 @@ conda deactivate
     ├── src/                       # 代码
     │   ├── CsvIO.py
     │   ├── logger.py
-    │   ├── ObbSelectApplicator.py
-    │   ├── ObbSelectWidgetor.py
-    │   ├── ObbSelectedWidgetor.py
+    │   ├── CalibrationApplicator.py
+    │   ├── PlateSelectionWidgetor.py
+    │   ├── FineTuningWidgetor.py
     │   ├── PcdAligner.py
     │   ├── PcdDimension.py
     │   ├── PcdDownsample.py
