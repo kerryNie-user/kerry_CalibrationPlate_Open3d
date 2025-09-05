@@ -109,7 +109,7 @@ class PointCloudAligner:
         translated_pcd.colors = pcd.colors  # 保持颜色不变
         return translated_pcd
 
-    def test_align_inverse_align(self, pcd):
+    def test(self, pcd):
         # 获取原始点云的所有点
         original_points = np.asarray(pcd.points)
         

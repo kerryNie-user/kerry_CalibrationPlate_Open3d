@@ -1,23 +1,22 @@
 import time
 import numpy as np
-import threading
 
 import open3d.geometry as geometry
 import open3d.visualization.gui as gui
 import open3d.visualization.rendering as rendering
 
 from logger import suggestion, info, debug
-from OperativeWidget import OperativeWidget
+from OperativeWidgetor import OperativeWidgetor
 
 # <<< 场景部件：用于从模型所有平面中人工选择标定板所在平面 >>>
-class ObbSelectWidget(OperativeWidget):
-    NONE_COLOR = [-1, -1, -1, -1]
-    MOUSE_OVER_COLOR = [0.9, 0.9, 0.9, 1.0]
-    MOUSE_CLICK_COLOR = [0.0, 1.0, 0.0, 1.0]
-    MOUSE_SELECT_COLOR = [0.0, 0.0, 1.0, 1.0]
+class ObbSelectWidgetor(OperativeWidgetor):
+    MOUSE_OVER_COLOR = OperativeWidgetor.GREY
+    MOUSE_CLICK_COLOR = OperativeWidgetor.GREEN
+    MOUSE_SELECT_COLOR = OperativeWidgetor.BLUE
 
     def __init__(self, pcd, patches, renderer):
         super().__init__()
+
         self.pcd_ = pcd
         self.patches_ = patches
 

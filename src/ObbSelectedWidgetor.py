@@ -8,31 +8,31 @@ import open3d.visualization.rendering as rendering
 
 from logger import info, debug, suggestion
 from PointCloudAligner import PointCloudAligner
-from PlateExtracter import PlateExtracter
-from PcdDimensionOperator import PcdDimensionOperator
-from OperativeWidget import OperativeWidget
+import PlateExtraction
+import PcdDimension
+from OperativeWidgetor import OperativeWidgetor
 
 PLATH_COLS = 10
 PLATH_ROWS = 7
 
 # <<< 场景部件：用于处理被选中的标定板展示界面 >>>
-class ObbSelectedWidget(OperativeWidget):
+class ObbSelectedWidgetor(OperativeWidgetor):
     COLS_HITTEN_STATE = 0
     ROWS_HITTEN_STATE = 1
 
+    MOUSE_OVER_COLOR = OperativeWidgetor.RED
+    MOUSE_CLICK_COLOR = OperativeWidgetor.GREEN
+    MOUSE_SELECT_COLOR = OperativeWidgetor.BLUE
+
     ROTATION_LOCK = 0
     ROTATION_UNLOCK = 1
-
-    NONE_COLOR = [-1, -1, -1, -1]
-    MOUSE_OVER_COLOR = [1.0, 0.0, 0.0, 1.0]
-    MOUSE_CLICK_COLOR = [0.0, 1.0, 0.0, 1.0]
-    MOUSE_SELECT_COLOR = [0.0, 0.0, 1.0, 1.0]
 
     ADDER_KEY = 61
     SUBER_KEY = 45
 
     def __init__(self, pcd, patches):
         super().__init__()
+
         self.pcd_ = pcd
         self.patches_ = patches
         self.aligner_ = PointCloudAligner()
@@ -82,10 +82,10 @@ class ObbSelectedWidget(OperativeWidget):
             raise RuntimeError("Scene has not been initialized, please use 'config_window' function before.")
 
         obb = self.patches_[obb_idx]
-        cropped_pcd, obb = PlateExtracter().extract_plate(self.pcd_, obb)
+        cropped_pcd, obb = PlateExtraction.extract_plate(self.pcd_, obb)
         aligned_pcd = self.aligner_.align(cropped_pcd, obb)
-        pcd2d = PcdDimensionOperator().compress_to_2d(aligned_pcd)
-        _, bounding_removed_obb = PlateExtracter().remove_boundary(aligned_pcd)
+        pcd2d = PcdDimension.compress_to_2d(aligned_pcd)
+        _, bounding_removed_obb = PlateExtraction.remove_boundary(aligned_pcd)
         rows_points, cols_points = self.create_operating_lever(pcd2d, bounding_removed_obb, PLATH_COLS, PLATH_ROWS, self.blank_distance_)
         self.sphere_centers_ = [cols_points, rows_points]
 
@@ -97,11 +97,6 @@ class ObbSelectedWidget(OperativeWidget):
 
         aabb = aligned_pcd.get_axis_aligned_bounding_box()
         self.setup_camera(60.0, aabb, aabb.get_center())
-
-    def clear(self):
-        self.pcd_ = None
-        self.patches_ = None
-        self.clean()
 
     def clean(self):
         self.scene.clear_geometry()
@@ -120,6 +115,7 @@ class ObbSelectedWidget(OperativeWidget):
 
         self.mouse_origin_position_ = None
         self.sphere_origin_position_ = None
+
 
 
     def _callback_mouse(self, event):

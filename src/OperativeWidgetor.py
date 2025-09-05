@@ -9,8 +9,14 @@ import open3d.visualization.rendering as rendering
 from logger import debug
 
 # <<< 场景父类：包含了鼠标坐标转化和简单模型一键显示 >>>
-class OperativeWidget(gui.SceneWidget):
+class OperativeWidgetor(gui.SceneWidget):
     NONE_HITTED_STATE = -1
+
+    NONE_COLOR = [-1, -1, -1, -1]
+    GREY = [0.9, 0.9, 0.9, 1.0]
+    RED = [1.0, 0.0, 0.0, 1.0]
+    GREEN = [0.0, 1.0, 0.0, 1.0]
+    BLUE = [0.0, 0.0, 1.0, 1.0]
 
     def __init__(self):
         super().__init__()
