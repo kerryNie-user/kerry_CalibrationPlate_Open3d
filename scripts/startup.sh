@@ -1,7 +1,4 @@
 #!/bin/bash
-# 第一次使用前须在终端运行 chmod +x startup.sh
-# pip install uv -i https://pypi.tuna.tsinghua.edu.cn/simple
 conda create -n RadarPcd python=3.12
 conda activate RadarPcd
-pip install open3d
-conda deactivate
+pip install open3d==0.19.0

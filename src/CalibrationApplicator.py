@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import numpy as np
 import open3d.visualization.gui as gui
 import open3d.geometry as geometry

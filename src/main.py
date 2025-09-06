@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # main.py  — Open3D 0.19, 鼠标射线检测 OBB
 import logger
 import CsvIO

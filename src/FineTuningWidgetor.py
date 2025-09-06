@@ -39,7 +39,7 @@ class FineTuningWidgetor(OperativeWidgetor):
     # 减少键（ASICII）
     SUBER_KEY = 45
 
-    def __init__(self, pcd, obbs):
+    def __init__(self, pcd: geometry.PointCloud, obbs: list[geometry.OrientedBoundingBox]):
         super().__init__()
 
         self.pcd_ = pcd
@@ -85,7 +85,7 @@ class FineTuningWidgetor(OperativeWidgetor):
         logger.suggestion("    '-' : going down or left.")
 
     # 配置窗口
-    def config_window(self, renderer):
+    def config_window(self, renderer: rendering.OffscreenRenderer):
         if self.scene is None:
             # 如果不存在场景，创建场景
             if renderer is None:
@@ -101,7 +101,7 @@ class FineTuningWidgetor(OperativeWidgetor):
             self.clean()
 
     # 处理点云并显示画面
-    def open_window(self, obb_idx):
+    def open_window(self, obb_idx: int):
         if self.scene is None:
             raise RuntimeError("Scene has not been initialized, please use 'config_window' function before.")
 
@@ -115,7 +115,7 @@ class FineTuningWidgetor(OperativeWidgetor):
         # 移除边界点
         _, bounding_removed_obb = PlateExtraction.remove_boundary(aligned_pcd)
         # 创建操作操纵杆点
-        rows_points, cols_points = self.create_operating_lever(pcd2d, bounding_removed_obb, PLATE_COLS, PLATE_ROWS, self.blank_distance_)
+        cols_points, rows_points = self.create_operating_lever(pcd2d, bounding_removed_obb, PLATE_COLS, PLATE_ROWS, self.blank_distance_)
         # 把操纵杆点合并到球体中心数组
         self.sphere_centers_ = [cols_points, rows_points]
 
@@ -151,7 +151,7 @@ class FineTuningWidgetor(OperativeWidgetor):
         self.sphere_origin_position_ = None
 
     # 鼠标事件处理
-    def _callback_mouse(self, event):
+    def _callback_mouse(self, event: gui.MouseEvent):
         logger.debug(f"[{time.process_time()}]--------------------")
         logger.debug(f"Mouse event type: {event.type}")
         logger.debug(f"Highlighted geometry == [{self.highlighted_type_}][{self.highlighted_idx_}]")
@@ -210,7 +210,7 @@ class FineTuningWidgetor(OperativeWidgetor):
         return gui.Widget.EventCallbackResult.HANDLED
 
     # 键盘事件处理
-    def _callback_key(self, event):
+    def _callback_key(self, event: gui.KeyEvent):
         logger.debug(f"[{time.process_time()}]--------------------")
         logger.debug(f"Key event type: {event.type}, Key: {event.key}")
         logger.debug(f"Selected geometry == [{self.selected_type_}][{self.selected_idx_}]")
@@ -244,62 +244,17 @@ class FineTuningWidgetor(OperativeWidgetor):
 
 
 
-    def get_corner_points(self):
-        cols_points = self.sphere_centers_[self.COLS_HITTEN_STATE]
-        rows_points = self.sphere_centers_[self.ROWS_HITTEN_STATE]
-
-        points = []
-        for i in range(int(len(cols_points) / 2)):
-            col_start = cols_points[2 * i]
-            col_end = cols_points[2 * i + 1]
-            for j in range(int(len(rows_points) / 2)):
-                row_strat = rows_points[2 * j]
-                row_end = rows_points[2 * j + 1]
-                intersection_point = self.line_intersection(col_start, col_end, row_strat, row_end)
-                points.append(intersection_point)
-
-        pcd = geometry.PointCloud()
-        pcd.points = utility.Vector3dVector(np.array(points))
-        restored_pcd = self.aligner_.inverse_align(pcd)
-
-        logger.info(f"Restored {len(restored_pcd.points)} points.")
-
-        return restored_pcd.points
-
-    def line_intersection(self, line1_start, line1_end, line2_start, line2_end):
-        line1_start = np.array(line1_start)
-        line1_end = np.array(line1_end)
-        line2_start = np.array(line2_start)
-        line2_end = np.array(line2_end)
-        
-        direct1 = line1_end - line1_start
-        direct2 = line2_end - line2_start
-        
-        denom = direct1[0] * direct2[1] - direct1[1] * direct2[0]
-        
-        if denom == 0:
-            return None
-        
-        direct_lines = line2_start - line1_start
-        t = (direct_lines[0] * direct2[1] - direct_lines[1] * direct2[0]) / denom
-        u = (direct_lines[0] * direct1[1] - direct_lines[1] * direct1[0]) / denom
-        
-        if 0 <= t <= 1 and 0 <= u <= 1:
-            intersection = line1_start + t * direct1
-            return intersection
-        else:
-            return None
-
-    def ray_intersects_sphere(self, line_origin, line_direct, sphere_center, sphere_radius):
-        # P: 直线上的点 P (x1, y1, z1)
+    # 计算射线与球的交点和距离
+    def ray_intersects_sphere(self, line_origin: list, line_direct: list, sphere_center: list, sphere_radius: float):
         # d: 直线的方向向量 (dx, dy, dz)
+        dx, dy, dz = line_direct
+        # P: 直线上的点 P (x1, y1, z1)
+        x1, y1, z1 = line_origin
         # O: 球心 (x0, y0, z0)
+        x0, y0, z0 = sphere_center
+
         # r: 球的半径
         # 计算一元二次方程的系数 A, B, C
-        dx, dy, dz = line_direct
-        x1, y1, z1 = line_origin
-        x0, y0, z0 = sphere_center
-        
         A = dx ** 2 + dy ** 2 + dz ** 2
         B = 2 * (dx * (x1 - x0) + dy * (y1 - y0) + dz * (z1 - z0))
         C = (x1 - x0) ** 2 + (y1 - y0) ** 2 + (z1 - z0) ** 2 - sphere_radius ** 2
@@ -317,9 +272,12 @@ class FineTuningWidgetor(OperativeWidgetor):
             tmax = - (B - np.sqrt(delta)) / (2 * A)
         return hit, tmin, tmax
 
-    def detect_intersects(self, mouse_position):
+    # 检测相交球
+    def detect_intersects(self, mouse_position: list):
+        # 求鼠标射线的起点和方向
         ray_origin, ray_direct = self.get_ray_of_mouse(mouse_position)
 
+        # 查找最近的交点，设为命中
         hit_type = self.NONE_HITTED_STATE
         hit_idx = self.NONE_HITTED_STATE
         min_distance = float("inf")
@@ -334,80 +292,82 @@ class FineTuningWidgetor(OperativeWidgetor):
                         min_distance = tmin
         return hit_type, hit_idx
 
-    def update_sphere_highlight(self, type, idx, color, name):
+    # 更新球的高亮显示
+    def update_sphere_highlight(self, type: int, idx: int, color: list, name: str):
         self.scene.remove_geometry(name)
         if type != self.NONE_HITTED_STATE and idx != self.NONE_HITTED_STATE and color != self.NONE_COLOR:
             self.visualize_sphere(self.sphere_centers_[type][idx], self.sphere_radius_, color, name)
             logger.debug(f"Added color {color} highlight to SPHERE[{type}][{idx}].")
 
-    def move_sphere(self, mouse_original_position, mouse_current_position):
+    # 计算球的移动向量
+    def move_sphere(self, mouse_original_position: list, mouse_current_position: list):
+        # 计算鼠标移动前后的方向向量
         ray_origin, ray_original_direct = self.get_ray_of_mouse(mouse_original_position)
         _, ray_current_direct = self.get_ray_of_mouse(mouse_current_position)
         
+        # 鼠标移动前后在 “2D点云” 上的交点
         original_intersection_point = self.line_intersection_plane(ray_origin, ray_original_direct)
         current_intersection_point = self.line_intersection_plane(ray_origin, ray_current_direct)
 
+        # 计算球的移动向量
         ray_displacement_vector = np.array(current_intersection_point) - np.array(original_intersection_point)
 
-        sphere_displacement_vector = [0.0, 0.0]
-
+        # 列上的点只允许横移，行上的点只允许竖移
         if self.highlighted_type_ == self.COLS_HITTEN_STATE:
-            sphere_displacement_vector[0] = ray_displacement_vector[0]
+            sphere_displacement_vector = [ray_displacement_vector[0], 0.0]
         elif self.highlighted_type_ == self.ROWS_HITTEN_STATE:
-            sphere_displacement_vector[1] = ray_displacement_vector[1]
+            sphere_displacement_vector = [0.0, ray_displacement_vector[1]]
         else:
             raise RuntimeError("Can not move a invisible thing.")
 
         return sphere_displacement_vector
 
-    def line_intersection_plane(self, line_origin, line_direct):
-        xo, yo, zo = line_origin
+    # 计算射线与平面 z=0 的交点
+    def line_intersection_plane(self, line_origin: list, line_direct: list):
+        x0, y0, z0 = line_origin
         xd, yd, zd = line_direct
 
         if zd == 0:
             raise ValueError("The line is parallel to the plane z=0, no intersection.")
         
-        t = - zo / zd
+        t = - z0 / zd
+        x = x0 + t * xd
+        y = y0 + t * yd
         
-        x = xo + t * xd
-        y = yo + t * yd
-        z = 0
+        return [x, y, 0.0]
 
-        intersection_point = [x, y, z]
-        
-        return intersection_point
 
-    def get_boundary(self, pcd: geometry.PointCloud):
+
+    # 从点云中拿到边界并扩展
+    def get_boundary(self, pcd: geometry.PointCloud, expand_distance: float=0.0):
         points = np.asarray(pcd.points)
-        left = np.min(points[:, 0])
-        right = np.max(points[:, 0])
-        bottom = np.min(points[:, 1])
-        top = np.max(points[:, 1])
+        left = np.min(points[:, 0]) - expand_distance
+        right = np.max(points[:, 0]) + expand_distance
+        bottom = np.min(points[:, 1]) - expand_distance
+        top = np.max(points[:, 1]) + expand_distance
         return left, right, bottom, top
 
-    def expand_boundary(self, left, right, bottom, top, distance):
-        left -= distance
-        right += distance
-        bottom -= distance
-        top += distance
-        return left, right, bottom, top
-
+    # 计算 OBB 角点
     def create_corner_lines(self, obb, cols, rows):
         extents = sorted(obb.extent, reverse=True)
         width, height, _ = extents
         x, y, _ = obb.center
 
+        # 计算边界点位
         obb_left_bound = x - width / 2
         obb_right_bound = x + width / 2
         obb_bottom_bound = y - height / 2
         obb_top_bound = y + height / 2
 
+        # 计算棋盘格边长
         col_width = width / cols
         row_height = height / rows
 
+        # 计算行列坐标
         rows_coordinates = [obb_bottom_bound + row_height * i  for i in range(1, rows)]
         cols_coordinates = [obb_left_bound + col_width * i  for i in range(1, cols)]
 
+        # 生成角点 3D 坐标
         left_points = np.asarray([[obb_left_bound, row_coordinate, 0] for row_coordinate in rows_coordinates])
         right_points = np.asarray([[obb_right_bound, row_coordinate, 0] for row_coordinate in rows_coordinates])
         bottom_points = np.asarray([[col_coordinate, obb_bottom_bound, 0] for col_coordinate in cols_coordinates])
@@ -415,28 +375,82 @@ class FineTuningWidgetor(OperativeWidgetor):
 
         return left_points, right_points, bottom_points, top_points
 
+    # 生成操纵杆点，即行列操纵球的中心
     def create_operating_lever(self, pcd, obb, cols, rows, distance):
-        left, right, bottom, top = self.get_boundary(pcd)
-        left, right, bottom, top = self.expand_boundary(left, right, bottom, top, distance)
+        # 计算边界点位
+        left, right, bottom, top = self.get_boundary(pcd, distance)
         left_points, right_points, bottom_points, top_points = self.create_corner_lines(obb, cols, rows)
 
+        # 扩展边界点位
         left_points[:, 0] = left
         right_points[:, 0] = right
         bottom_points[:, 1] = bottom
         top_points[:, 1] = top
 
-        rows_points = [point for pair in zip(left_points, right_points) for point in pair]
+        # 生成操纵杆点
         cols_points = [point for pair in zip(bottom_points, top_points) for point in pair]
+        rows_points = [point for pair in zip(left_points, right_points) for point in pair]
 
-        return rows_points, cols_points
+        return cols_points, rows_points
 
+    # 可视化操作操纵杆
     def visualize_operation_lever(self, cols_points, rows_points, radius):
+        # 可视化经纬线
         logger.debug("Cols of points and lines:")
         self.visualize_points_lines(cols_points, "cols")
         logger.debug("Rows of points and lines:")
         self.visualize_points_lines(rows_points, "rows")
         
+        # 可视化操纵球
         logger.debug("Cols of spheres:")
         self.visualize_spheres(cols_points, radius, [0.9, 0.9, 0.9, 1.0], "cols_spheres")
         logger.debug("Rows of spheres:")
         self.visualize_spheres(rows_points, radius, [0.9, 0.9, 0.9, 1.0], "rows_spheres")
+
+
+
+    # 计算线段与线段的交点
+    def line_intersection(self, line1_start: list, line1_end: list, line2_start: list, line2_end: list):
+        # 线段方向向量
+        direct1 = np.array(line1_end) - np.array(line1_start)
+        direct2 = np.array(line2_end) - np.array(line2_start)
+        
+        # 法向量叉乘
+        denom = direct1[0] * direct2[1] - direct1[1] * direct2[0]
+        
+        if denom != 0:
+            direct_lines = np.array(line2_start) - np.array(line1_start)
+            t = (direct_lines[0] * direct2[1] - direct_lines[1] * direct2[0]) / denom
+            u = (direct_lines[0] * direct1[1] - direct_lines[1] * direct1[0]) / denom
+        
+            if 0 <= t <= 1 and 0 <= u <= 1:
+                intersection = np.array(line1_start) + t * direct1
+                return intersection
+        return None
+
+    # 返回角点
+    def get_corner_points(self):
+        # 拿到行列坐标
+        cols_points = self.sphere_centers_[self.COLS_HITTEN_STATE]
+        rows_points = self.sphere_centers_[self.ROWS_HITTEN_STATE]
+
+        # 对于每一根经线，计算所有纬线的交点
+        points = []
+        for i in range(int(len(cols_points) / 2)):
+            col_start = cols_points[2 * i]
+            col_end = cols_points[2 * i + 1]
+            for j in range(int(len(rows_points) / 2)):
+                row_strat = rows_points[2 * j]
+                row_end = rows_points[2 * j + 1]
+                intersection_point = self.line_intersection(col_start, col_end, row_strat, row_end)
+                points.append(intersection_point)
+
+        # 构成点云
+        pcd = geometry.PointCloud()
+        pcd.points = utility.Vector3dVector(np.array(points))
+        # 逆转向得到原点
+        restored_pcd = self.aligner_.inverse_align(pcd)
+
+        logger.info(f"Restored {len(restored_pcd.points)} points.")
+
+        return restored_pcd.points

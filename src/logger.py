@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import logging
 
 # 日志等级：数字越大，输出门槛越低
