@@ -332,6 +332,48 @@ def render_lidar_projection(
     }
 
 
+def save_mat_results(
+    mat_path: Path,
+    transform: np.ndarray,
+    camera_matrix: np.ndarray,
+    dist_coeffs: np.ndarray,
+    order_config: dict,
+    metrics: dict,
+):
+    def write_mat_v4_matrix(f, name: str, arr):
+        data = np.asarray(arr, dtype=np.float64)
+        if data.ndim == 0:
+            data = data.reshape(1, 1)
+        elif data.ndim == 1:
+            data = data.reshape(-1, 1)
+        rows, cols = data.shape
+        type_code = np.int32(0)
+        imagf = np.int32(0)
+        name_bytes = name.encode("ascii", errors="ignore") + b"\x00"
+        header = np.array([type_code, rows, cols, imagf, len(name_bytes)], dtype=np.int32)
+        f.write(header.tobytes(order="C"))
+        f.write(name_bytes)
+        f.write(np.asfortranarray(data).tobytes(order="F"))
+
+    mat_path.parent.mkdir(parents=True, exist_ok=True)
+    with mat_path.open("wb") as f:
+        write_mat_v4_matrix(f, "R", transform[:3, :3].astype(np.float64))
+        write_mat_v4_matrix(f, "T", transform[:3, 3].reshape(3, 1).astype(np.float64))
+        write_mat_v4_matrix(f, "T_cam_lidar", transform.astype(np.float64))
+        write_mat_v4_matrix(f, "R_cam_lidar", transform[:3, :3].astype(np.float64))
+        write_mat_v4_matrix(f, "t_cam_lidar", transform[:3, 3].reshape(3, 1).astype(np.float64))
+        write_mat_v4_matrix(f, "camera_matrix", camera_matrix.astype(np.float64))
+        write_mat_v4_matrix(f, "dist_coeffs", dist_coeffs.astype(np.float64))
+        write_mat_v4_matrix(f, "pattern_source_cols", [[float(order_config["source_cols"])]])
+        write_mat_v4_matrix(f, "pattern_source_rows", [[float(order_config["source_rows"])]])
+        write_mat_v4_matrix(f, "pattern_transpose", [[float(int(order_config["transpose"]))]])
+        write_mat_v4_matrix(f, "pattern_flip_x", [[float(int(order_config["flip_x"]))]])
+        write_mat_v4_matrix(f, "pattern_flip_y", [[float(int(order_config["flip_y"]))]])
+        for k, v in metrics.items():
+            if isinstance(v, (int, float, np.integer, np.floating)):
+                write_mat_v4_matrix(f, f"metric_{k}", [[float(v)]])
+
+
 def save_results(output_dir: Path, transform, metrics, inlier_mask, reprojected, order_config, ranking):
     output_dir.mkdir(parents=True, exist_ok=True)
     np.savez(
@@ -371,6 +413,7 @@ def main():
     parser.add_argument("--vis-canvas", default="output/lidar_projection_canvas.jpg")
     parser.add_argument("--vis-point-radius", type=int, default=1)
     parser.add_argument("--vis-max-points", type=int, default=120000)
+    parser.add_argument("--output-mat", default="output/cam_lidar_extrinsic.mat")
     args = parser.parse_args()
 
     camera_csv = Path(args.camera_csv)
@@ -420,6 +463,14 @@ def main():
     inlier_mask = best["inlier_mask"]
     order = best["order"]
     save_results(output_dir, transform, metrics, inlier_mask, reprojected, order, ranking)
+    save_mat_results(
+        mat_path=Path(args.output_mat),
+        transform=transform,
+        camera_matrix=camera_matrix,
+        dist_coeffs=dist_coeffs,
+        order_config=order,
+        metrics=metrics,
+    )
 
     image_path = Path(args.image)
     lidar_cloud_path = Path(args.lidar_cloud)
@@ -455,6 +506,7 @@ def main():
     print(f"  {output_dir / 'cam_lidar_extrinsic.npz'}")
     print(f"  {output_dir / 'calibration_report.json'}")
     print(f"  {output_dir / 'reprojection_detail.csv'}")
+    print(f"  {Path(args.output_mat)}")
     print(f"  {Path(args.vis_overlay)}")
     print(f"  {Path(args.vis_canvas)}")
     print(f"可视化可见点: {vis_stats['num_visible']}/{vis_stats['num_total']}")
