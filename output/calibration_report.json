@@ -1,0 +1,146 @@
+{
+  "T_cam_lidar": [
+    [
+      0.00902316088064481,
+      0.993301652598753,
+      0.11519726347577985,
+      0.22008211689090887
+    ],
+    [
+      -0.17394476853433316,
+      0.1150047479481443,
+      -0.978016935154459,
+      0.16636353349819627
+    ],
+    [
+      -0.9847140702088395,
+      -0.01121315718118926,
+      0.17381733238883496,
+      2.396221062555375
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "R": [
+    [
+      0.00902316088064481,
+      0.993301652598753,
+      0.11519726347577985
+    ],
+    [
+      -0.17394476853433316,
+      0.1150047479481443,
+      -0.978016935154459
+    ],
+    [
+      -0.9847140702088395,
+      -0.01121315718118926,
+      0.17381733238883496
+    ]
+  ],
+  "t": [
+    0.22008211689090887,
+    0.16636353349819627,
+    2.396221062555375
+  ],
+  "metrics": {
+    "rmse_px": 1.6906788561066957,
+    "mean_px": 1.5732986055447817,
+    "median_px": 1.5191484046371153,
+    "p90_px": 2.2611744173868105,
+    "max_px": 3.081879127187646,
+    "inlier_ratio_lt1px": 0.21052631578947367,
+    "inlier_ratio_lt2px": 0.7368421052631579,
+    "inlier_ratio_lt3px": 0.9473684210526315,
+    "depth_positive_ratio": 1.0,
+    "match_score_0_100": 66.6919421137063,
+    "num_points": 54,
+    "num_inliers": 19
+  },
+  "best_order_config": {
+    "source_cols": 6,
+    "source_rows": 9,
+    "transpose": true,
+    "flip_x": true,
+    "flip_y": false
+  },
+  "order_ranking_top": [
+    {
+      "source_cols": 6,
+      "source_rows": 9,
+      "transpose": true,
+      "flip_x": true,
+      "flip_y": false,
+      "rmse_px": 1.6906788561066957,
+      "score_0_100": 66.6919421137063
+    },
+    {
+      "source_cols": 6,
+      "source_rows": 9,
+      "transpose": true,
+      "flip_x": true,
+      "flip_y": true,
+      "rmse_px": 1.735954388800987,
+      "score_0_100": 67.93861294951287
+    },
+    {
+      "source_cols": 6,
+      "source_rows": 9,
+      "transpose": true,
+      "flip_x": false,
+      "flip_y": true,
+      "rmse_px": 1.7757853659189282,
+      "score_0_100": 64.57112369735495
+    },
+    {
+      "source_cols": 6,
+      "source_rows": 9,
+      "transpose": true,
+      "flip_x": false,
+      "flip_y": false,
+      "rmse_px": 2.0543420078571426,
+      "score_0_100": 57.19778280312604
+    },
+    {
+      "source_cols": 9,
+      "source_rows": 6,
+      "transpose": false,
+      "flip_x": true,
+      "flip_y": false,
+      "rmse_px": 493.33906867295343,
+      "score_0_100": 10.0
+    },
+    {
+      "source_cols": 9,
+      "source_rows": 6,
+      "transpose": false,
+      "flip_x": false,
+      "flip_y": true,
+      "rmse_px": 493.37507236783165,
+      "score_0_100": 10.0
+    },
+    {
+      "source_cols": 9,
+      "source_rows": 6,
+      "transpose": false,
+      "flip_x": false,
+      "flip_y": false,
+      "rmse_px": 493.41552349097554,
+      "score_0_100": 10.0
+    },
+    {
+      "source_cols": 9,
+      "source_rows": 6,
+      "transpose": false,
+      "flip_x": true,
+      "flip_y": true,
+      "rmse_px": 493.4320730663174,
+      "score_0_100": 10.0
+    }
+  ],
+  "quality_level": "可用"
+}

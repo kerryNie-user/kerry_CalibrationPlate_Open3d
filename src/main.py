@@ -9,7 +9,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Calibration Plate App')
     parser.add_argument('--input',  default='res/map.csv',
                         help='输入点云文件路径，支持 .csv 和 .ply（默认：res/map.csv）')
-    parser.add_argument('--output', default='output/corner.csv',
+    parser.add_argument('--output', default='output/lidar_corner.csv',
                         help='输出角点 CSV 文件路径（默认：output/corner.csv）')
     args = parser.parse_args()
 
