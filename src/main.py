@@ -3,7 +3,7 @@
 import argparse
 import logger
 import CsvIO
-from CalibrationApplicator import CalibrationApplicator
+from CalibrationApplicator import CalibrationApplication
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Calibration Plate App')
@@ -21,7 +21,7 @@ if __name__ == "__main__":
     points, reflectivities = CsvIO.readPoints(args.input)
 
     # 运行程序
-    application = CalibrationApplicator(points, reflectivities)
+    application = CalibrationApplication(points, reflectivities)
     application.app_.run()
 
     # 从程序中拿到标定点
