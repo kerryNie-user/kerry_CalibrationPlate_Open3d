@@ -197,3 +197,6 @@ class OperativeWidgetor(gui.SceneWidget):
 
         # 把线集添加到场景
         self.scene.add_geometry(name, line_set, material)
+
+
+OperativeWidget = OperativeWidgetor

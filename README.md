@@ -59,6 +59,15 @@ conda deactivate
 
 如果你使用自己的数据，请先准备与这些文件等价的输入。
 
+当前代码已经统一了 GUI 选点和 `joint_calibration.py` 的输入契约，常用格式如下：
+
+1. 雷达点云 CSV 支持两种形态：
+2. 12 列格式，读取第 9 到 12 列作为 `x,y,z,reflectivity`
+3. 4 列格式，直接读取第 1 到 4 列作为 `x,y,z,reflectivity`
+4. 雷达角点 CSV 使用三列 `x,y,z`
+5. 图像角点 CSV 支持两列 `x,y`，也支持带前置索引列时从最后两列读取坐标
+6. 相机参数支持 `npz` 和 `yaml/yml`
+
 ### 2. 在雷达点云中选取标定板角点
 
 运行：
@@ -114,6 +123,14 @@ python joint_calibration.py
 ```bash
 python joint_calibration.py --camera-params output/camera_params.yaml
 ```
+
+这里的 `--pattern-cols` 和 `--pattern-rows` 表示棋盘“内角点”数量，而不是棋盘格数量。
+
+例如：
+
+1. `--pattern-cols 9 --pattern-rows 6` 表示 9x6 个内角点。
+2. 对应到 GUI 微调界面，会生成 10 条列线和 7 条行线。
+3. 标定阶段会要求角点总数必须等于 `9 * 6 = 54`，否则直接报错。
 
 ### 5. 查看标定结果
 

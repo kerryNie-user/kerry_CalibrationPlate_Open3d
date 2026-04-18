@@ -1,18 +1,23 @@
 # -*- coding: utf-8 -*-
+from dataclasses import dataclass, field
+
 import numpy as np
 import open3d.geometry as geometry
 import open3d.utility as utility
 
-import logger
+try:
+    from . import logger
+except ImportError:
+    import logger
+
+
+@dataclass
+class AlignmentTransform:
+    rotations: list[tuple[np.ndarray, np.ndarray]] = field(default_factory=list)
+    translations: list[tuple[np.ndarray, np.ndarray]] = field(default_factory=list)
 
 # 用于旋转和平移点云
 class PcdAligner:
-    def __init__(self):
-        # 旋转配置集合，用于逆旋转
-        self.rotate_list_ = []
-        # 平移配置集合，用于逆平移
-        self.translate_list_ = []
-
     # 旋转点云，使点云正放在 XOY 平面
     def align(self, pcd: geometry.PointCloud, obb: geometry.OrientedBoundingBox = None):
         # 点云过少系统不支持移动
@@ -21,7 +26,8 @@ class PcdAligner:
 
         # 创建新的 pcd 和 obb对象，避免影响指针
         aligning_pcd = geometry.PointCloud(pcd)
-        aligning_obb = geometry.OrientedBoundingBox(obb) if obb != None else pcd.get_oriented_bounding_box()
+        aligning_obb = geometry.OrientedBoundingBox(obb) if obb is not None else pcd.get_oriented_bounding_box()
+        transform = AlignmentTransform()
 
         # 计算最大面法向量
         face_direct = self.area_face_direct(aligning_obb, 0)  # 获取最大面法向量
@@ -29,7 +35,7 @@ class PcdAligner:
         target_direct = np.array([0, 0, 1])
         # 移动使其与 z 轴对齐
         aligning_pcd, aligning_obb = self.rotate_to_direct(aligning_pcd, aligning_obb, origin_direct, target_direct)
-        self.rotate_list_.append((origin_direct, target_direct))
+        transform.rotations.append((origin_direct, target_direct))
 
         # 计算第二大面法向量
         up_direct = self.area_face_direct(aligning_obb, 1)
@@ -37,34 +43,36 @@ class PcdAligner:
         target_direct = np.array([0, 1, 0])
         # 移动使其与 y 轴对齐
         aligning_pcd, _ = self.rotate_to_direct(aligning_pcd, aligning_obb, origin_direct, target_direct)
-        self.rotate_list_.append((origin_direct, target_direct))
+        transform.rotations.append((origin_direct, target_direct))
 
         # 计算中心坐标
         origin_point = aligning_pcd.get_oriented_bounding_box().get_center()
         target_point = np.array([0, 0, 0])
         # 移动到原点
         aligning_pcd = self.translate_to_point(aligning_pcd, origin_point, target_point)
-        self.translate_list_.append((origin_point, target_point))
+        transform.translations.append((origin_point, target_point))
 
-        logger.info(f"Done {len(self.rotate_list_)} rotate and {len(self.translate_list_)} translate as align")
-        return aligning_pcd
+        logger.info(f"Done {len(transform.rotations)} rotate and {len(transform.translations)} translate as align")
+        return aligning_pcd, transform
 
     # 逆操作，将点云恢复到原始状态
-    def inverse_align(self, pcd: geometry.PointCloud):
-        if len(self.rotate_list_) == 0 and len(self.translate_list_) == 0:
+    def inverse_align(self, pcd: geometry.PointCloud, transform: AlignmentTransform):
+        if len(transform.rotations) == 0 and len(transform.translations) == 0:
             raise RuntimeError("You have to do some align first.")
 
         # 所有平移操作的历史
-        for translation in reversed(self.translate_list_):
+        for translation in reversed(transform.translations):
             target_point, origin_point = translation
             pcd = self.translate_to_point(pcd, origin_point, target_point)
 
         # 所有旋转操作的历史
-        for rotation in reversed(self.rotate_list_):
+        for rotation in reversed(transform.rotations):
             target_direct, origin_direct = rotation
             pcd, _ = self.rotate_to_direct(pcd, None, origin_direct, target_direct)
 
-        logger.info(f"Done {len(self.translate_list_)} inverse translate and {len(self.rotate_list_)} inverse rotate as inverse align.")
+        logger.info(
+            f"Done {len(transform.translations)} inverse translate and {len(transform.rotations)} inverse rotate as inverse align."
+        )
         return pcd
 
     # 计算最大面对应的法向量
@@ -114,7 +122,7 @@ class PcdAligner:
         # 旋转点云
         points_rot = np.asarray(pcd.points) @ R.T
         # 更新 OBB
-        if obb != None:
+        if obb is not None:
             obb = obb.rotate(R)
 
         # 构建新点云
@@ -141,10 +149,10 @@ class PcdAligner:
         original_points = np.asarray(pcd.points)
         
         # 对整个点云进行 align 操作
-        aligned_pcd = self.align(pcd)
+        aligned_pcd, transform = self.align(pcd)
 
         # 对 align 后的点云进行 inverse_align 操作
-        restored_pcd = self.inverse_align(aligned_pcd)
+        restored_pcd = self.inverse_align(aligned_pcd, transform)
 
         # 获取恢复后的点云的所有点
         restored_points = np.asarray(restored_pcd.points)
@@ -161,9 +169,7 @@ class PcdAligner:
         # 如果所有点都一致
         if all_points_equal:
             logger.info("Align and its inverse function can work well.")
-        
-        self.clear()
     
     def clear(self):
-        self.rotate_list_.clear()
-        self.translate_list_.clear()
+        # 保留兼容接口；无状态实现下无需清理历史
+        return None

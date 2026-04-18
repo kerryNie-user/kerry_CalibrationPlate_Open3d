@@ -49,6 +49,7 @@ class PlateSelectionWidgetor(OperativeWidgetor):
         # 选择角点后运行的回调函数
         self._callback_on_select = None
         # 被选择的角点
+        self.chosen_points_ = None
         self.choosed_points_ = None
 
         # 初始相机
@@ -90,8 +91,8 @@ class PlateSelectionWidgetor(OperativeWidgetor):
         self.update_obb_highlight(self.selected_idx_, self.MOUSE_CLICK_COLOR, "selected_obb")
 
         # 刷新角点显示
-        if self.choosed_points_ is not None:
-            self.visualize_spheres(self.choosed_points_, 0.01, self.MOUSE_SELECT_COLOR, "selected_spheres")
+        if self.chosen_points_ is not None:
+            self.visualize_spheres(self.chosen_points_, 0.01, self.MOUSE_SELECT_COLOR, "selected_spheres")
 
         return gui.Widget.EventCallbackResult.HANDLED
 
@@ -147,5 +148,12 @@ class PlateSelectionWidgetor(OperativeWidgetor):
         self._callback_on_select = callback
 
     # 设置被选择的角点
-    def set_choosed_points(self, points):
+    def set_chosen_points(self, points):
+        self.chosen_points_ = points
         self.choosed_points_ = points
+
+    def set_choosed_points(self, points):
+        self.set_chosen_points(points)
+
+
+PlateSelectionWidget = PlateSelectionWidgetor
