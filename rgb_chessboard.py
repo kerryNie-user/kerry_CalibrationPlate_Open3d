@@ -78,5 +78,5 @@ else:
     print("   2. 图片是否清晰、无遮挡、棋盘格完整")
     print("   3. 棋盘是否有明显反光、过曝或过暗")
 
-cv2.imwrite("chessboard_with_corners.jpg", img)
+cv2.imwrite("output/chessboard_with_corners.jpg", img)
 cv2.destroyAllWindows()
